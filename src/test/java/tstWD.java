@@ -6,10 +6,7 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,8 +29,7 @@ public class tstWD {
         System.setProperty("webdriver.gecko.driver", "/Users/lorem/tat/HT1/geckodriver");
 
         // Старт с пустой страницы браузера
-        //firefoxProfile.setPreference("browser.startup.homepage", "about:blank");
-
+        firefoxProfile.setPreference("browser.startup.homepage", "about:blank");
         // Запуск драйвера (и браузера)
         webDriver = new FirefoxDriver(firefoxProfile);
     }
@@ -56,6 +52,21 @@ public class tstWD {
         if (!"".equals(verificationErrorString)) {
             Assert.fail(verificationErrorString);
         }
+    }
+
+    // Authentication
+    @BeforeTest
+    public void beforeTest() {
+        webDriver.get(base_url);
+        webDriver.findElement(By.linkText("log in")).click();
+
+        WebDriverWait wait = new WebDriverWait(webDriver, 5);
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 0));
+
+        webDriver.findElement(By.name("j_username")).sendKeys("Lorem");
+        webDriver.findElement(By.name("j_password")).sendKeys("admin");
+
+        webDriver.findElement(By.name("Submit")).click();
     }
 
     @Test
@@ -172,35 +183,53 @@ public class tstWD {
 
     @Test
     public void tstUserTable() {
-        ArrayList<WebElement> forms = (ArrayList<WebElement>) webDriver.findElements(By.tagName("form"));
-        Assert.assertFalse(forms.isEmpty(), "No forms found. ");
-        Iterator<WebElement> i = forms.iterator();
-        WebElement form = null;
+        WebElement form = webDriver.findElement(By.xpath("//form"));
+        WebElement tableCell;
 
-        while (i.hasNext()) {
-            form = i.next();
-
-            form.findElement(By.name("Username")).clear();
-            form.findElement(By.name("Username")).sendKeys("someuser");
-            Assert.assertEquals(form.findElement(By.name("Username")).getAttribute("value"), "someuser", "Unable to fill 'Username' filed");
-
-            form.findElement(By.name("Password")).clear();
-            form.findElement(By.name("Password")).sendKeys("somepassword");
-            Assert.assertEquals(form.findElement(By.name("Password")).getAttribute("value"), "somepassword", "Unable to fill 'Password' filed");
-
-            form.findElement(By.name("Confirm password")).clear();
-            form.findElement(By.name("Confirm password")).sendKeys("somepassword");
-            Assert.assertEquals(form.findElement(By.name("Confirm password")).getAttribute("value"), "somepassword", "Unable to fill 'Confirm password' filed");
-
-            form.findElement(By.name("Full name")).clear();
-            form.findElement(By.name("Full name")).sendKeys("Some Full Name");
-            Assert.assertEquals(form.findElement(By.name("Full name")).getAttribute("value"), "Some Full Name", "Unable to fill 'Full Name' filed");
-
-            form.findElement(By.name("E-mail address")).clear();
-            form.findElement(By.name("E-mail address")).sendKeys("some@addr.dom");
-            Assert.assertEquals(form.findElement(By.name("E-mail address")).getAttribute("value"), "some@addr.dom", "Unable to fill 'E-mail address' filed");
+        tableCell = form.findElement(By.xpath("//tr[1]"));
+        if (tableCell.findElement(By.xpath("td[1]")).getText().equals("Username")) {
+            tableCell.findElement(By.xpath("//td[2]")).clear();
+            tableCell.findElement(By.xpath("//td[2]")).sendKeys("someuser");
+            Assert.assertEquals(form.findElement(By.name("Username")).getAttribute("value"), "someuser", "Unable to fill 'Username' field");
+        } else {
+            Assert.fail("Unable to find 'Username' field. ");
         }
 
+        tableCell = form.findElement(By.xpath("//tr[2]"));
+        if (tableCell.findElement(By.xpath("//td[1]")).getText().equals("Password")) {
+            form.findElement(By.name("Password")).clear();
+            form.findElement(By.name("Password")).sendKeys("somepassword");
+            Assert.assertEquals(form.findElement(By.name("Password")).getAttribute("value"), "somepassword", "Unable to fill 'Password' field");
+        } else {
+            Assert.fail("Unable to find 'Password' field. ");
+        }
+
+        tableCell = form.findElement(By.xpath("//tr[3]"));
+        if (tableCell.findElement(By.xpath("//td[1]")).getText().equals("Confirm password")) {
+            form.findElement(By.name("Confirm password")).clear();
+            form.findElement(By.name("Confirm password")).sendKeys("somepassword");
+            Assert.assertEquals(form.findElement(By.name("Confirm password")).getAttribute("value"), "somepassword", "Unable to fill 'Confirm password' field");
+        } else {
+            Assert.fail("Unable to find 'Confirm password' field. ");
+        }
+
+        tableCell = form.findElement(By.xpath("//tr[4]"));
+        if (tableCell.findElement(By.xpath("//td[1]")).getText().equals("Full name")) {
+            form.findElement(By.name("Full name")).clear();
+            form.findElement(By.name("Full name")).sendKeys("Some Full Name");
+            Assert.assertEquals(form.findElement(By.name("Full name")).getAttribute("value"), "Some Full Name", "Unable to fill 'Full Name' field");
+        } else {
+            Assert.fail("Unable to find 'Full name' field. ");
+        }
+
+        tableCell = form.findElement(By.xpath("//tr[5]"));
+        if (tableCell.findElement(By.xpath("//td[1]")).getText().equals("E-mail address")) {
+            form.findElement(By.name("E-mail address")).clear();
+            form.findElement(By.name("E-mail address")).sendKeys("some@addr.dom");
+            Assert.assertEquals(form.findElement(By.name("E-mail address")).getAttribute("value"), "some@addr.dom", "Unable to fill 'E-mail address' field");
+        } else {
+            Assert.fail("Unable to find 'E-mail address' field. ");
+        }
 
         form.findElement(By.xpath("//input[@type=\"submit\"]")).click();
 
@@ -211,11 +240,37 @@ public class tstWD {
 
     }
 
-    @Test
+    @Test (dependsOnMethods={"tstUserTable"})
     public void tstDeleteUser() {
-        WebElement form = null;
+        WebElement element =  webDriver.findElement(By.cssSelector("link=user/someuser/delete"));
 
+        Assert.assertEquals(element.getAttribute("href"), "user/someuser/delete", "Unable to find 'user/someuser/delete' link element. ");
 
+        element.click();
+        WebDriverWait wait = new WebDriverWait(webDriver, 5);
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 0));
+
+        Assert.assertEquals(webDriver.findElement(By.xpath("//table/tbody/tr[1]/td[1]")).getText(), "«Are you sure about deleting the user from Jenkins?»",
+                "Unable to find text '«Are you sure about deleting the user from Jenkins?». '");
+    }
+
+    @Test (dependsOnMethods={"tstDeleteUser"})
+    public void tstAfterDeleteUser() {
+        webDriver.findElement(By.cssSelector("link=Yes")).click();
+
+        WebDriverWait wait = new WebDriverWait(webDriver, 5);
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 0));
+
+        Collection<WebElement> table = webDriver.findElements(By.xpath("//table/tbody"));
+        Iterator<WebElement> i = table.iterator();
+        WebElement element;
+
+        while (i.hasNext()) {
+            element = i.next();
+            if (element.getText().equals("someuser")) {
+                Assert.fail("Unable to delete user 'someuser'. ");
+            }
+        }
     }
 
 }
