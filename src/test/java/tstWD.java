@@ -56,8 +56,8 @@ public class tstWD {
         webDriver.get(base_url + "/manage");
 
         boolean forms_equal = false;
-        WebElement panel = webDriver.findElement(By.xpath("//div/a[@title=\"Manage Users\"]"));
-        someElement = panel;
+        WebElement link = webDriver.findElement(By.xpath("//div/a[@title=\"Manage Users\"]"));
+        someElement = link;
 
         WebElement element1 = webDriver.findElement(By.xpath("//div/a[@title=\"Manage Users\"]/dl/dt"));
         Assert.assertNotNull(element1, "Unable to locate element 'dt'. ");
@@ -72,7 +72,7 @@ public class tstWD {
 
         Assert.assertTrue(forms_equal);
 
-        panel.click();
+        link.click();
         next_url = webDriver.getCurrentUrl();
 
     }
@@ -82,36 +82,24 @@ public class tstWD {
         webDriver.get(next_url);
         WebElement element = webDriver.findElement(By.xpath("//div/a[@class=\"task-link\"][@href=\"addUser\"]"));
         Assert.assertTrue(element.getText().equals("Create User"));
+
+        element.click();
+        next_url = webDriver.getCurrentUrl();
     }
 
-    @Test
+    @Test(dependsOnMethods = {"tstLinkCreateUser"})
     public void tstPageCreateUser() {
-
-        webDriver.get(base_url + "/manage");
-        webDriver.findElement(By.linkText("Create User")).click();
-        WebElement text1 = null, text2 = null, text3 = null, password1 = null, password2 = null;
+        webDriver.get(next_url);
         boolean isClear = false;
 
-        Collection<WebElement> forms = webDriver.findElements(By.tagName("form"));
-        Assert.assertFalse(forms.isEmpty(), "No forms found. ");
+        WebElement form = webDriver.findElement(By.xpath("//table"));
+        Assert.assertNotNull(form, "No forms found. ");
 
-        Iterator<WebElement> i = forms.iterator();
-        boolean formFound = false;
-        WebElement form;
-
-        while (i.hasNext()) {
-            form = i.next();
-            if (((text1 = form.findElement(By.xpath("//form[1]"))).getAttribute("type").equalsIgnoreCase("text")) &&
-                    ((text2 = form.findElement(By.xpath("//form[2]"))).getAttribute("type").equalsIgnoreCase("text")) &&
-                    ((text3 = form.findElement(By.xpath("//form[3]"))).getAttribute("type").equalsIgnoreCase("text")) &&
-                    ((password1 = form.findElement(By.xpath("//form[4]"))).getAttribute("type").equalsIgnoreCase("password")) &&
-                    ((password2 = form.findElement(By.xpath("//form[5]"))).getAttribute("type").equalsIgnoreCase("password"))) {
-                formFound = true;
-                break;
-            }
-        }
-
-        Assert.assertTrue(formFound, "There is no such forms. ");
+        WebElement text1 = form.findElement(By.xpath("//input[@name=\"username\"][@type=\"text\"]"));
+        WebElement text2 = form.findElement(By.xpath("//input[@name=\"fullname\"][@type=\"text\"]"));
+        WebElement text3 = form.findElement(By.xpath("//input[@name=\"email\"][@type=\"text\"]"));
+        WebElement password1 = form.findElement(By.xpath("//input[@name=\"password1\"][@type=\"password\"]"));
+        WebElement password2 = form.findElement(By.xpath("//input[@name=\"password2\"][@type=\"password\"]"));
 
         if (text1.getText().equals("") &&
                 text2.getText().equals("") &&
