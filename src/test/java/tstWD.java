@@ -18,6 +18,7 @@ public class tstWD {
 
     private String base_url = "http://localhost:8080";
     private String next_url;
+    private WebElement someElement;
     private WebDriver webDriver = null;
 
     // Some settings and Authentication
@@ -135,9 +136,7 @@ public class tstWD {
         text3.sendKeys("some@addr.dom");
         Assert.assertEquals(text3.getAttribute("value"), "some@addr.dom", "Unable to fill 'E-mail address' field");
 
-        WebElement button = webDriver.findElement(By.xpath("//form/span[@name=\"Submit\"]"));
-
-        button.click();
+        webDriver.findElement(By.xpath("//form/span[@name=\"Submit\"]")).click();
 
         WebDriverWait wait = new WebDriverWait(webDriver, 5);
         wait.until(ExpectedConditions.numberOfElementsToBe(By.id("//main-panel"), 0));
@@ -165,21 +164,14 @@ public class tstWD {
 
     @Test(dependsOnMethods = {"tstDeleteUser"})
     public void tstAfterDeleteUser() {
-        webDriver.findElement(By.cssSelector("link=Yes")).click();
+        webDriver.findElement(By.xpath("//form/span[@name=\"Submit\"]")).click();
 
         WebDriverWait wait = new WebDriverWait(webDriver, 5);
-        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 0));
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 1));
 
-        Collection<WebElement> table = webDriver.findElements(By.xpath("//table/tbody"));
-        Iterator<WebElement> i = table.iterator();
-        WebElement element;
-
-        while (i.hasNext()) {
-            element = i.next();
-            if (element.getText().equals("someuser")) {
-                Assert.fail("Unable to delete user 'someuser'. ");
-            }
-        }
+        WebElement table = webDriver.findElement(By.xpath("//table[@id=\"people\"]"));
+        System.out.print(table.getText().contains("someuser"));
+        Assert.assertFalse(table.getText().contains("someuser"));
     }
 
 }
