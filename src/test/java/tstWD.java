@@ -10,7 +10,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -18,10 +17,8 @@ import java.util.Iterator;
 public class tstWD {
 
     private String base_url = "http://localhost:8080";
-
-    // Эмуляция verify
-    private StringBuffer verificationErrors = new StringBuffer();
-
+    private String next_url;
+    WebElement someElement = null;
     private WebDriver webDriver = null;
 
     // Some settings and Authentication
@@ -35,8 +32,9 @@ public class tstWD {
 
         // Запуск драйвера (и браузера)
         webDriver = new ChromeDriver(capabilities);
-
         webDriver.get(base_url);
+
+        // Authentication
         webDriver.findElement(By.linkText("log in")).click();
 
         WebDriverWait wait = new WebDriverWait(webDriver, 5);
@@ -51,13 +49,6 @@ public class tstWD {
     @AfterClass
     public void afterClass() {
         webDriver.quit();
-
-        // Если в "накопителе сообщений об ошибках" что-то есть,
-        // крэшим тест с соответствующим сообщением:
-        String verificationErrorString = verificationErrors.toString();
-        if (!"".equals(verificationErrorString)) {
-            Assert.fail(verificationErrorString);
-        }
     }
 
     @Test
@@ -65,14 +56,13 @@ public class tstWD {
         webDriver.get(base_url + "/manage");
 
         boolean forms_equal = false;
-        WebElement panel = webDriver.findElement(By.id("main-panel"));
-        Assert.assertNotNull(panel, "Unable to find element with id 'main-panel'. ");
+        WebElement panel = webDriver.findElement(By.xpath("//div/a[@title=\"Manage Users\"]"));
+        someElement = panel;
 
-        //WebElement element1 = element.findElement(By.xpath("//dt"));
-        WebElement element1 = panel.findElement(By.xpath("//div/a[@title=\"Manage Users\"]/dl/dt"));
+        WebElement element1 = webDriver.findElement(By.xpath("//div/a[@title=\"Manage Users\"]/dl/dt"));
         Assert.assertNotNull(element1, "Unable to locate element 'dt'. ");
 
-        WebElement element2 = panel.findElement(By.xpath("//div/a[@title=\"Manage Users\"]/dl/dd"));
+        WebElement element2 = webDriver.findElement(By.xpath("//div/a[@title=\"Manage Users\"]/dl/dd"));
         Assert.assertNotNull(element2, "Unable to locate element 'dd'. ");
 
         if (element1.getText().equals("Manage Users") &&
@@ -82,12 +72,16 @@ public class tstWD {
 
         Assert.assertTrue(forms_equal);
 
+        panel.click();
+        next_url = webDriver.getCurrentUrl();
+
     }
 
-    @Test
+    @Test(dependsOnMethods = {"tstManageElements"})
     public void tstLinkCreateUser() {
-        webDriver.get(base_url + "/manage");
-        Assert.assertTrue(webDriver.findElement(By.linkText("Create User")).isEnabled());
+        webDriver.get(next_url);
+        WebElement element = webDriver.findElement(By.xpath("//div/a[@class=\"task-link\"][@href=\"addUser\"]"));
+        Assert.assertTrue(element.getText().equals("Create User"));
     }
 
     @Test
@@ -191,9 +185,9 @@ public class tstWD {
 
     }
 
-    @Test (dependsOnMethods={"tstUserTable"})
+    @Test(dependsOnMethods = {"tstUserTable"})
     public void tstDeleteUser() {
-        WebElement element =  webDriver.findElement(By.cssSelector("link=user/someuser/delete"));
+        WebElement element = webDriver.findElement(By.cssSelector("link=user/someuser/delete"));
 
         Assert.assertEquals(element.getAttribute("href"), "user/someuser/delete", "Unable to find 'user/someuser/delete' link element. ");
 
@@ -205,7 +199,7 @@ public class tstWD {
                 "Unable to find text '«Are you sure about deleting the user from Jenkins?». '");
     }
 
-    @Test (dependsOnMethods={"tstDeleteUser"})
+    @Test(dependsOnMethods = {"tstDeleteUser"})
     public void tstAfterDeleteUser() {
         webDriver.findElement(By.cssSelector("link=Yes")).click();
 
