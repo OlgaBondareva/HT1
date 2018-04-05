@@ -11,14 +11,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 
 public class tstWD {
 
     private String base_url = "http://localhost:8080";
     private String next_url;
-    private WebElement someElement;
     private WebDriver webDriver = null;
 
     // Some settings and Authentication
@@ -164,6 +161,7 @@ public class tstWD {
 
     @Test(dependsOnMethods = {"tstDeleteUser"})
     public void tstAfterDeleteUser() {
+        next_url = webDriver.getCurrentUrl();
         webDriver.findElement(By.xpath("//form/span[@name=\"Submit\"]")).click();
 
         WebDriverWait wait = new WebDriverWait(webDriver, 5);
@@ -174,4 +172,12 @@ public class tstWD {
         Assert.assertFalse(table.getText().contains("someuser"));
     }
 
+    @Test
+    public void tstUserAdmin() {
+        webDriver.get(next_url);
+        WebElement table = webDriver.findElement(By.xpath("//table[@id=\"people\"]"));
+        System.out.print(table.getText().contains("admin"));
+        Assert.assertFalse(table.getText().contains("admin"));
+
+    }
 }
