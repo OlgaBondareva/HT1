@@ -144,19 +144,22 @@ public class tstWD {
 
         WebElement user = webDriver.findElement(By.xpath("//a[@href=\"user/someuser/\"]"));
         Assert.assertNotNull(user, "Unable to find table entry 'someuser'. ");
+        next_url = webDriver.getCurrentUrl();
     }
 
     @Test(dependsOnMethods = {"tstUserTable"})
     public void tstDeleteUser() {
-        WebElement element = webDriver.findElement(By.cssSelector("link=user/someuser/delete"));
+        webDriver.get(next_url);
+        WebElement link = webDriver.findElement(By.xpath("//a[@href=\"user/someuser/delete\"]"));
 
-        Assert.assertEquals(element.getAttribute("href"), "user/someuser/delete", "Unable to find 'user/someuser/delete' link element. ");
+        Assert.assertNotNull(link, "Unable to find 'user/someuser/delete' link element. ");
 
-        element.click();
+        link.click();
         WebDriverWait wait = new WebDriverWait(webDriver, 5);
-        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 0));
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.xpath("//form"), 2));
 
-        Assert.assertEquals(webDriver.findElement(By.xpath("//table/tbody/tr[1]/td[1]")).getText(), "«Are you sure about deleting the user from Jenkins?»",
+        WebElement form = webDriver.findElement(By.xpath("//form[@name=\"delete\"]"));
+        Assert.assertEquals(form.getText(), "Are you sure about deleting the user from Jenkins?\nYes",
                 "Unable to find text '«Are you sure about deleting the user from Jenkins?». '");
     }
 
